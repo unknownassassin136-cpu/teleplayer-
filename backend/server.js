@@ -53,6 +53,10 @@ if (!existingAdmin) {
 // Initialize Telegram client
 if (process.env.TELEGRAM_SESSION) {
   try {
+    // Add a small delay to allow previous instances to disconnect during redeploy
+    console.log('⏳ Waiting for previous sessions to clear...');
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    
     await initializeTelegramClient(
       process.env.TELEGRAM_SESSION,
       process.env.TELEGRAM_API_ID,
