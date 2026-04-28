@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "init-telegram": "node scripts/init-telegram.js",
+    "init-telegram": "node telegram/init-session.js",
     "init-admin": "node scripts/init-admin.js",
     "seed-video": "node scripts/seed-video.js",
     "test": "echo \"Error: no test specified\" && exit 1"
