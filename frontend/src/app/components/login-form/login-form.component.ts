@@ -12,7 +12,7 @@ import { AuthService } from '../../services/auth.service';
     <div class="min-h-screen bg-netflix-dark flex items-center justify-center p-4">
       <div class="max-w-md w-full">
         <div class="backdrop-blur-md bg-black bg-opacity-70 rounded-lg p-8">
-          <h1 class="text-3xl font-bold mb-8 text-center">TELPLAYER</h1>
+          <h1 class="text-3xl font-bold mb-8 text-center">{{ isRegister ? 'Join TELPLAYER' : 'TELPLAYER' }}</h1>
 
           <form (ngSubmit)="onSubmit()" class="space-y-4">
             <div>
@@ -42,13 +42,15 @@ import { AuthService } from '../../services/auth.service';
               [disabled]="loading"
               class="w-full bg-netflix-red text-white py-2 rounded font-bold hover:bg-red-700 transition disabled:opacity-50"
             >
-              {{ loading ? 'Logging in...' : 'Login' }}
+              {{ loading ? (isRegister ? 'Creating account...' : 'Logging in...') : (isRegister ? 'Register' : 'Login') }}
             </button>
           </form>
 
-          <p class="text-center text-sm mt-4">
-            Don't have an account? 
-            <button (click)="toggleMode()" class="text-netflix-red hover:underline">Register</button>
+          <p class="text-center text-sm mt-4 text-gray-400">
+            {{ isRegister ? 'Already have an account?' : "Don't have an account?" }}
+            <button (click)="toggleMode()" class="text-netflix-red hover:underline font-medium">
+              {{ isRegister ? 'Login' : 'Register now' }}
+            </button>
           </p>
 
           <div *ngIf="error" class="mt-4 p-3 bg-red-900 bg-opacity-50 rounded text-red-300 text-sm">

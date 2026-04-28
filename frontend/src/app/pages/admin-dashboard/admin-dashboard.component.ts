@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../services/admin.service';
@@ -6,6 +6,7 @@ import { Video } from '../../services/video.service';
 import { User } from '../../services/auth.service';
 import { Subscription, timer } from 'rxjs';
 import { VideoService } from '../../services/video.service';
+import { ThumbnailService } from '../../services/thumbnail.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -74,9 +75,6 @@ import { VideoService } from '../../services/video.service';
           </div>
         </div>
       </div>
-      <!-- Hidden video element for thumbnail generation -->
-      <video #thumbnailVideo style="display: none;" crossorigin="anonymous"></video>
-      <canvas #thumbnailCanvas style="display: none;"></canvas>
     </div>
   `,
   styles: []
@@ -86,12 +84,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   users: User[] = [];
   private pollingSub?: Subscription;
 
-  @ViewChild('thumbnailVideo') thumbnailVideo!: ElementRef<HTMLVideoElement>;
-  @ViewChild('thumbnailCanvas') thumbnailCanvas!: ElementRef<HTMLCanvasElement>;
-
   constructor(
     private adminService: AdminService,
-    private videoService: VideoService
+    private videoService: VideoService,
+    private thumbnailService: ThumbnailService
   ) {}
 
   ngOnInit() {
@@ -114,11 +110,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   loadVideos() {
     this.adminService.getVideos().subscribe({
       next: (videos) => {
-        // Deep compare or just replace. Since it's admin, replace is fine.
         this.videos = videos;
-        
-        // Check for missing thumbnails
-        this.checkAndGenerateThumbnails();
+        // Generate thumbnails automatically
+        this.thumbnailService.generateMissingThumbnails(this.videos);
       }
     });
   }
@@ -128,61 +122,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       next: (users) => {
         this.users = users;
       }
-    });
-  }
-
-  async checkAndGenerateThumbnails() {
-    for (const video of this.videos) {
-      if (!video.thumbnail) {
-        await this.generateThumbnail(video);
-      }
-    }
-  }
-
-  generateThumbnail(video: Video): Promise<void> {
-    return new Promise((resolve) => {
-      const videoEl = this.thumbnailVideo.nativeElement;
-      const canvasEl = this.thumbnailCanvas.nativeElement;
-      const streamUrl = this.videoService.getStreamUrl(video.id);
-
-      videoEl.src = streamUrl;
-      videoEl.currentTime = 2.0; // Capture at 2 seconds
-      videoEl.muted = true;
-      videoEl.play().catch(() => {}); // Play slightly to buffer
-
-      const onCanPlay = () => {
-        videoEl.pause();
-        canvasEl.width = videoEl.videoWidth || 1280;
-        canvasEl.height = videoEl.videoHeight || 720;
-        const ctx = canvasEl.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
-          const base64Thumb = canvasEl.toDataURL('image/jpeg', 0.7);
-          video.thumbnail = base64Thumb;
-          this.adminService.updateVideo(video.id, video).subscribe({
-            next: () => console.log(`Thumbnail generated for video ${video.id}`),
-            error: () => console.error(`Failed to update thumbnail for video ${video.id}`)
-          });
-        }
-        cleanup();
-        resolve();
-      };
-
-      const onError = () => {
-        cleanup();
-        resolve(); // resolve anyway to not block others
-      };
-
-      const cleanup = () => {
-        videoEl.removeEventListener('canplay', onCanPlay);
-        videoEl.removeEventListener('error', onError);
-        videoEl.pause();
-        videoEl.removeAttribute('src');
-        videoEl.load();
-      };
-
-      videoEl.addEventListener('canplay', onCanPlay);
-      videoEl.addEventListener('error', onError);
     });
   }
 

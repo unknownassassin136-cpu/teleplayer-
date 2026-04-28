@@ -5,6 +5,8 @@ import { Subscription, timer } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { VideoCardComponent } from '../../components/video-card/video-card.component';
 import { CategoryListComponent } from '../../components/category-list/category-list.component';
+import { AuthService } from '../../services/auth.service';
+import { ThumbnailService } from '../../services/thumbnail.service';
 
 @Component({
   selector: 'app-home',
@@ -51,7 +53,11 @@ export class HomeComponent implements OnInit, OnDestroy {
   loading = true;
   private pollingSubscription?: Subscription;
 
-  constructor(private videoService: VideoService) {}
+  constructor(
+    private videoService: VideoService,
+    private authService: AuthService,
+    private thumbnailService: ThumbnailService
+  ) {}
 
   ngOnInit() {
     this.startPolling();
@@ -80,6 +86,11 @@ export class HomeComponent implements OnInit, OnDestroy {
         next: (videos) => {
           this.videos = videos;
           this.loading = false;
+          
+          // Generate thumbnails if admin
+          if (this.authService.isAdmin()) {
+            this.thumbnailService.generateMissingThumbnails(this.videos);
+          }
         },
         error: () => {
           this.loading = false;
