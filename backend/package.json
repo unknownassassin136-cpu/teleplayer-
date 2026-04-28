@@ -1,0 +1,34 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "init-telegram": "node scripts/init-telegram.js",
+    "init-admin": "node scripts/init-admin.js",
+    "seed-video": "node scripts/seed-video.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Video streaming backend using Telegram MTProto",
+  "dependencies": {
+    "bcrypt": "latest",
+    "better-sqlite3": "latest",
+    "big-integer": "^1.6.52",
+    "cors": "latest",
+    "dotenv": "latest",
+    "express": "latest",
+    "input": "^1.0.1",
+    "jsonwebtoken": "latest",
+    "prompt-sync": "latest",
+    "telegraf": "latest",
+    "telegram": "^2.26.22"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
