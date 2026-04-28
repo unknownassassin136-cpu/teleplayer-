@@ -17,7 +17,7 @@ export interface Video {
   providedIn: 'root'
 })
 export class VideoService {
-  private apiUrl = 'http://localhost:3000/videos';
+  private apiUrl = 'https://teleplayer.onrender.com/videos';
 
   constructor(private http: HttpClient) {}
 
