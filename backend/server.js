@@ -37,6 +37,19 @@ app.use(express.json());
 const db = initializeDatabase(process.env.DB_PATH || './database.sqlite');
 console.log('✓ Database initialized');
 
+// Auto-seed admin user if not exists
+import bcrypt from 'bcrypt';
+const adminEmail = process.env.ADMIN_EMAIL || 'admin@localhost';
+const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+const existingAdmin = db.prepare('SELECT id FROM users WHERE email = ?').get(adminEmail);
+if (!existingAdmin) {
+  const hash = await bcrypt.hash(adminPassword, 10);
+  db.prepare('INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)').run(adminEmail, hash, 'admin');
+  console.log(`✓ Admin user seeded: ${adminEmail}`);
+} else {
+  console.log(`✓ Admin user exists: ${adminEmail}`);
+}
+
 // Initialize Telegram client
 if (process.env.TELEGRAM_SESSION) {
   try {
