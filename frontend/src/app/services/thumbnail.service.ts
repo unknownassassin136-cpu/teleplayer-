@@ -44,24 +44,33 @@ export class ThumbnailService {
       const streamUrl = this.videoService.getStreamUrl(video.id);
 
       videoEl.src = streamUrl;
-      videoEl.currentTime = 2.0;
+      videoEl.currentTime = 1.0; // Try 1 second instead of 2
 
-      const onCanPlay = () => {
-        videoEl.pause();
-        canvasEl.width = videoEl.videoWidth || 1280;
-        canvasEl.height = videoEl.videoHeight || 720;
-        const ctx = canvasEl.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
-          const base64Thumb = canvasEl.toDataURL('image/jpeg', 0.7);
-          video.thumbnail = base64Thumb;
-          this.adminService.updateVideo(video.id, video).subscribe({
-            next: () => console.log(`Thumbnail generated for video ${video.id}`),
-            error: () => console.error(`Failed to update thumbnail for video ${video.id}`)
-          });
-        }
-        cleanup();
-        resolve();
+      const onSeeked = () => {
+        // Wait a tiny bit for the frame to actually render
+        setTimeout(() => {
+          videoEl.pause();
+          canvasEl.width = videoEl.videoWidth || 1280;
+          canvasEl.height = videoEl.videoHeight || 720;
+          const ctx = canvasEl.getContext('2d');
+          
+          if (ctx && videoEl.videoWidth > 0) {
+            ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+            const base64Thumb = canvasEl.toDataURL('image/jpeg', 0.7);
+            
+            // Check if the image is mostly black/empty
+            // (Simple check: if we got a valid DataURL)
+            if (base64Thumb.length > 1000) {
+              video.thumbnail = base64Thumb;
+              this.adminService.updateVideo(video.id, video).subscribe({
+                next: () => console.log(`Thumbnail generated for video ${video.id}`),
+                error: () => console.error(`Failed to update thumbnail for video ${video.id}`)
+              });
+            }
+          }
+          cleanup();
+          resolve();
+        }, 500);
       };
 
       const onError = () => {
@@ -70,16 +79,16 @@ export class ThumbnailService {
       };
 
       const cleanup = () => {
-        videoEl.removeEventListener('canplay', onCanPlay);
+        videoEl.removeEventListener('seeked', onSeeked);
         videoEl.removeEventListener('error', onError);
         videoEl.pause();
         videoEl.removeAttribute('src');
         videoEl.load();
       };
 
-      videoEl.addEventListener('canplay', onCanPlay);
+      videoEl.addEventListener('seeked', onSeeked);
       videoEl.addEventListener('error', onError);
-      videoEl.play().catch(() => {});
+      videoEl.load(); // Ensure it starts loading
     });
   }
 }
