@@ -23,9 +23,31 @@ export async function initializeTelegramClient(sessionString, apiId, apiHash, ch
 
   client = new TelegramClient(session, parseInt(apiId), apiHash, {
     connectionRetries: 5,
+    useWSS: true, // Use WebSockets for better stability in some environments
   });
 
-  await client.connect();
+  let connected = false;
+  let retries = 0;
+  const maxRetries = 3;
+
+  while (!connected && retries < maxRetries) {
+    try {
+      await client.connect();
+      connected = true;
+    } catch (err) {
+      if (err.message.includes('AUTH_KEY_DUPLICATED')) {
+        retries++;
+        console.warn(`⚠️ Session conflict (AUTH_KEY_DUPLICATED). Retry ${retries}/${maxRetries} in 10s...`);
+        await new Promise(resolve => setTimeout(resolve, 10000));
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  if (!connected) {
+    throw new Error('Failed to connect to Telegram after multiple retries due to session conflict.');
+  }
 
   // Verify we're authorized
   const me = await client.getMe();
