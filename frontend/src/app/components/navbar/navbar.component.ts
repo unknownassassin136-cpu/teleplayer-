@@ -17,7 +17,8 @@ import { AuthService } from '../../services/auth.service';
         <div class="hidden md:flex gap-6">
           <a routerLink="/" class="hover:text-netflix-red transition">Home</a>
           <a [routerLink]="['/']" class="hover:text-netflix-red transition">Categories</a>
-          <a *ngIf="(currentUser$ | async)?.role === 'admin'" routerLink="/admin" class="text-netflix-red">Admin</a>
+          <a *ngIf="(currentUser$ | async)?.role === 'admin'" routerLink="/admin/monitor" class="hover:text-netflix-red transition">Monitor</a>
+          <a *ngIf="(currentUser$ | async)?.role === 'admin'" routerLink="/admin" class="text-netflix-red font-bold">Admin</a>
         </div>
 
         <div>
