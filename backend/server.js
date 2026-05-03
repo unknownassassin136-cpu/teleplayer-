@@ -6,6 +6,9 @@ import { initializeTelegramClient, disconnectTelegram } from './telegram/client.
 import { setupAuthRoutes } from './routes/auth.routes.js';
 import { setupVideoRoutes } from './routes/video.routes.js';
 import { setupAdminRoutes } from './routes/admin.routes.js';
+import { setupMonitorRoutes } from './routes/monitor.routes.js';
+import { monitoringService } from './services/monitoring/index.js';
+import http from 'http';
 
 dotenv.config();
 
@@ -74,6 +77,7 @@ if (process.env.TELEGRAM_SESSION) {
 app.use('/auth', setupAuthRoutes(db, process.env.JWT_SECRET));
 app.use('/videos', setupVideoRoutes(db, process.env.JWT_SECRET));
 app.use('/admin', setupAdminRoutes(db, process.env.JWT_SECRET));
+app.use('/monitor', setupMonitorRoutes(db, process.env.JWT_SECRET));
 
 // Health check
 app.get('/health', (req, res) => {
@@ -86,8 +90,14 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
+// Create HTTP server
+const server = http.createServer(app);
+
+// Initialize monitoring service with socket.io
+monitoringService.initialize(server, process.env.MONITOR_STREAM_PORT);
+
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`✓ Server running on http://localhost:${PORT}`);
 });
 

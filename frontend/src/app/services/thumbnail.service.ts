@@ -28,10 +28,16 @@ export class ThumbnailService {
   async generateMissingThumbnails(videos: Video[]) {
     if (!this.videoEl || !this.canvasEl) return;
 
-    for (const video of videos) {
-      if (!video.thumbnail) {
-        await this.generateThumbnail(video);
-      }
+    const missing = videos.filter(v => !v.thumbnail);
+    if (missing.length === 0) return;
+
+    console.log(`Generating ${missing.length} missing thumbnails...`);
+    
+    // Process in batches of 3 to avoid overloading the browser
+    const batchSize = 3;
+    for (let i = 0; i < missing.length; i += batchSize) {
+      const batch = missing.slice(i, i + batchSize);
+      await Promise.all(batch.map(video => this.generateThumbnail(video)));
     }
   }
 
@@ -50,8 +56,12 @@ export class ThumbnailService {
         // Wait a tiny bit for the frame to actually render
         setTimeout(() => {
           videoEl.pause();
-          canvasEl.width = videoEl.videoWidth || 1280;
-          canvasEl.height = videoEl.videoHeight || 720;
+          // Resize to a reasonable thumbnail size
+          const targetWidth = 320;
+          const targetHeight = (videoEl.videoHeight / videoEl.videoWidth) * targetWidth || 180;
+          
+          canvasEl.width = targetWidth;
+          canvasEl.height = targetHeight;
           const ctx = canvasEl.getContext('2d');
           
           if (ctx && videoEl.videoWidth > 0) {
@@ -70,7 +80,7 @@ export class ThumbnailService {
           }
           cleanup();
           resolve();
-        }, 500);
+        }, 200);
       };
 
       const onError = () => {

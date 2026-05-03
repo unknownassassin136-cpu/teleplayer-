@@ -25,6 +25,7 @@
     "input": "^1.0.1",
     "jsonwebtoken": "latest",
     "prompt-sync": "latest",
+    "socket.io": "^4.8.3",
     "telegraf": "latest",
     "telegram": "^2.26.22"
   },

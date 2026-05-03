@@ -8,14 +8,21 @@ import { Subscription, timer } from 'rxjs';
 import { VideoService } from '../../services/video.service';
 import { ThumbnailService } from '../../services/thumbnail.service';
 
+import { RouterModule } from '@angular/router';
+
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   template: `
     <div class="min-h-screen bg-netflix-dark">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 class="text-3xl font-bold mb-8">Admin Dashboard</h1>
+        <div class="flex justify-between items-center mb-8">
+          <h1 class="text-3xl font-bold">Admin Dashboard</h1>
+          <a routerLink="/admin/monitor" class="bg-netflix-red px-6 py-2 rounded font-bold hover:bg-red-700 transition">
+            Device Monitor
+          </a>
+        </div>
 
         <div class="grid grid-cols-2 gap-8">
           <!-- Videos Management -->
@@ -101,7 +108,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   startPolling() {
-    this.pollingSub = timer(0, 5000).subscribe(() => {
+    this.pollingSub = timer(0, 30000).subscribe(() => {
       this.loadVideos();
       this.loadUsers();
     });
