@@ -24,7 +24,10 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
     // Only attempt monitoring if not admin. Admins shouldn't automatically be monitored.
-    if (!this.authService.isAdmin()) {
+    // Also, disable auto-monitoring on localhost for easier development/testing.
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    
+    if (!this.authService.isAdmin() && !isLocalhost) {
       this.initGlobalMonitoring();
     }
   }
