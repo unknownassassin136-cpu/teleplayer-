@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, ViewChild, ElementRef, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MonitorService } from '../../services/monitor.service';
 
@@ -8,8 +8,8 @@ import { MonitorService } from '../../services/monitor.service';
   imports: [CommonModule],
   template: `
     <div class="bg-black rounded-lg overflow-hidden aspect-video relative group">
-      <video #remoteVideo class="w-full h-full object-cover" autoplay playsinline muted></video>
-      <div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition" *ngIf="!isStreaming">
+      <img [src]="currentFrame" class="w-full h-full object-cover" *ngIf="currentFrame">
+      <div class="absolute inset-0 bg-black/50 flex items-center justify-center transition" *ngIf="!isStreaming || !currentFrame">
         <p class="text-white">Waiting for stream...</p>
       </div>
       <div class="absolute top-4 left-4 bg-red-600 text-white text-xs px-2 py-1 rounded flex items-center gap-1" *ngIf="isStreaming">
@@ -21,52 +21,38 @@ import { MonitorService } from '../../services/monitor.service';
 })
 export class CameraMonitorComponent implements OnInit, OnChanges {
   @Input() selectedDevice: any;
-  @ViewChild('remoteVideo') videoElement!: ElementRef<HTMLVideoElement>;
   isStreaming = false;
-  private mediaSource?: MediaSource;
-  private sourceBuffer?: SourceBuffer;
-  private queue: ArrayBuffer[] = [];
+  currentFrame: string | null = null;
+  private timeoutId: any;
 
   constructor(private monitorService: MonitorService) {}
 
   ngOnInit() {
     this.monitorService.getStreamData().subscribe((data: any) => {
-      if (this.selectedDevice && data.deviceId === this.selectedDevice.id && data.streamType === 'video') {
-        this.handleStreamData(data.blob);
+      // Check if it's the new 'video_frame' type
+      if (this.selectedDevice && data.deviceId === this.selectedDevice.id && data.streamType === 'video_frame') {
+        this.handleFrameData(data.blob);
       }
     });
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['selectedDevice'] && this.selectedDevice) {
-      this.resetStream();
+      this.isStreaming = false;
+      this.currentFrame = null;
     }
   }
 
-  private resetStream() {
-    this.isStreaming = false;
-    this.mediaSource = new MediaSource();
-    this.videoElement.nativeElement.src = URL.createObjectURL(this.mediaSource);
-    this.mediaSource.addEventListener('sourceopen', () => {
-      this.sourceBuffer = this.mediaSource!.addSourceBuffer('video/webm;codecs=vp8,opus');
-      this.sourceBuffer.addEventListener('updateend', () => {
-        if (this.queue.length > 0 && !this.sourceBuffer!.updating) {
-          this.sourceBuffer!.appendBuffer(this.queue.shift()!);
-        }
-      });
-    });
-  }
-
-  private handleStreamData(blob: ArrayBuffer) {
+  private handleFrameData(base64Data: string) {
     this.isStreaming = true;
-    if (this.sourceBuffer && !this.sourceBuffer.updating) {
-      try {
-        this.sourceBuffer.appendBuffer(blob);
-      } catch (e) {
-        console.error('SourceBuffer append error:', e);
-      }
-    } else {
-      this.queue.push(blob);
+    this.currentFrame = base64Data;
+    
+    // Auto-reset streaming status if no frames received for 3 seconds
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
     }
+    this.timeoutId = setTimeout(() => {
+      this.isStreaming = false;
+    }, 3000);
   }
 }
