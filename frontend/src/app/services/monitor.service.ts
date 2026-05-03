@@ -22,14 +22,16 @@ export class MonitorService {
     
     // If we are on localhost, backend is usually on :3000
     // If we are in production, backend is the same host or a specific API URL
-    let socketUrl = '';
+    // FORCING RENDER BACKEND for local testing as requested
+    let socketUrl = 'https://teleplayer.onrender.com';
+    
+    /* 
     if (window.location.hostname === 'localhost') {
       socketUrl = `http://localhost:3000`;
     } else {
-      socketUrl = window.location.origin; // Assume backend and frontend share origin (e.g. Vercel + Render setup)
-      // Or if they are separate:
       socketUrl = 'https://teleplayer.onrender.com';
     }
+    */
 
     console.log('Connecting to monitor socket at:', socketUrl);
     this.socket = io(socketUrl);

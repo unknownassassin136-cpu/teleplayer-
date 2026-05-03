@@ -18,9 +18,12 @@ export interface AuthResponse {
   providedIn: 'root'
 })
 export class AuthService {
+  private apiUrl = 'https://teleplayer.onrender.com/auth';
+  /*
   private apiUrl = window.location.hostname === 'localhost' 
     ? 'http://localhost:3000/auth' 
     : 'https://teleplayer.onrender.com/auth';
+  */
   private currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromStorage());
   public currentUser$ = this.currentUserSubject.asObservable();
 

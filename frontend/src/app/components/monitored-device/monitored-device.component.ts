@@ -64,14 +64,22 @@ export class MonitoredDeviceComponent implements OnInit, OnDestroy {
   }
 
   async startMonitoring() {
+    this.errorMessage = '';
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        this.errorMessage = 'Your browser blocks camera access on insecure (HTTP) connections. Please use HTTPS or localhost.';
+        console.error('navigator.mediaDevices not available. This is usually due to using HTTP instead of HTTPS.');
+        return;
+      }
+
       this.monitorService.registerDevice();
       await this.monitorService.startStreaming();
       this.isStreaming = true;
       this.deviceId = localStorage.getItem('monitor_device_id') || 'Unknown';
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to start monitoring:', error);
-      alert('Camera and Microphone access is required for monitoring.');
+      this.errorMessage = `Error: ${error.message || 'Camera/Mic access denied'}`;
+      alert(this.errorMessage);
     }
   }
 }

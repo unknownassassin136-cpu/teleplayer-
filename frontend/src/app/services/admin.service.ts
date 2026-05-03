@@ -8,9 +8,12 @@ import { User } from './auth.service';
   providedIn: 'root'
 })
 export class AdminService {
+  private apiUrl = 'https://teleplayer.onrender.com/admin';
+  /*
   private apiUrl = window.location.hostname === 'localhost' 
     ? 'http://localhost:3000/admin' 
     : 'https://teleplayer.onrender.com/admin';
+  */
 
   constructor(private http: HttpClient) {}
 
