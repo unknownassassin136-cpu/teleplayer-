@@ -15,13 +15,23 @@ export function setupAuthRoutes(db, jwtSecret) {
 
       const passwordHash = await bcrypt.hash(password, 10);
 
-      const stmt = db.prepare(
+      db.prepare(
         'INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)'
-      );
-      
-      stmt.run(email, passwordHash, 'user');
+      ).run(email, passwordHash, 'user');
 
-      res.status(201).json({ message: 'User registered successfully' });
+      const userResult = db.prepare('SELECT id, email, role FROM users WHERE email = ?').get(email);
+      
+      const token = jwt.sign(
+        { userId: userResult.id, email: userResult.email, role: userResult.role },
+        jwtSecret,
+        { expiresIn: '7d' }
+      );
+
+      res.status(201).json({ 
+        message: 'User registered successfully',
+        token,
+        user: userResult
+      });
     } catch (error) {
       if (error.message.includes('UNIQUE')) {
         return res.status(409).json({ error: 'Email already registered' });

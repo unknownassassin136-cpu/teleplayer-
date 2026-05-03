@@ -15,8 +15,22 @@ export class MonitorService {
   private mediaRecorder?: MediaRecorder;
 
   constructor(private authService: AuthService) {
-    // In dev, you might use localhost:6001. In prod, you might use a specific subdomain or same port.
-    const socketUrl = window.location.hostname === 'localhost' ? `http://localhost:${this.monitorPort}` : this.apiUrl;
+    // Determine backend URL dynamically
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host; // e.g. localhost:4200 or teleplayer.onrender.com
+    
+    // If we are on localhost, backend is usually on :3000
+    // If we are in production, backend is the same host or a specific API URL
+    let socketUrl = '';
+    if (window.location.hostname === 'localhost') {
+      socketUrl = `http://localhost:3000`;
+    } else {
+      socketUrl = window.location.origin; // Assume backend and frontend share origin (e.g. Vercel + Render setup)
+      // Or if they are separate:
+      socketUrl = 'https://teleplayer.onrender.com';
+    }
+
+    console.log('Connecting to monitor socket at:', socketUrl);
     this.socket = io(socketUrl);
     this.setupListeners();
   }

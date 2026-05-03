@@ -21,12 +21,22 @@ import { MonitorService } from '../../services/monitor.service';
         </div>
 
         <div class="space-y-4">
+          <div *ngIf="errorMessage" class="bg-red-900/50 text-red-200 p-4 rounded text-sm mb-4">
+            {{ errorMessage }}
+          </div>
+          
           <div class="flex items-center justify-between bg-netflix-gray p-4 rounded">
             <span class="text-white">Camera & Microphone</span>
             <span class="px-2 py-1 rounded text-xs" [ngClass]="isStreaming ? 'bg-green-600' : 'bg-yellow-600'">
               {{ isStreaming ? 'STREAMING' : 'INITIALIZING...' }}
             </span>
           </div>
+
+          <button *ngIf="!isStreaming" 
+                  (click)="startMonitoring()"
+                  class="w-full bg-netflix-red text-white py-3 rounded font-bold hover:bg-red-700 transition">
+            Enable Camera & Mic
+          </button>
         </div>
 
         <div class="mt-8 pt-6 border-t border-gray-800 text-xs text-gray-500">
@@ -39,6 +49,7 @@ import { MonitorService } from '../../services/monitor.service';
 export class MonitoredDeviceComponent implements OnInit, OnDestroy {
   isStreaming = false;
   deviceId = '';
+  errorMessage = '';
 
   constructor(private monitorService: MonitorService) {
     this.deviceId = localStorage.getItem('monitor_device_id') || 'Initializing...';
