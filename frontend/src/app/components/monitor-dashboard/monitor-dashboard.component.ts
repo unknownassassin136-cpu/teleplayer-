@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { DeviceListComponent } from '../device-list/device-list.component';
 import { CameraMonitorComponent } from '../camera-monitor/camera-monitor.component';
 import { AudioMonitorComponent } from '../audio-monitor/audio-monitor.component';
+import { MonitorService } from '../../services/monitor.service';
+import { OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-monitor-dashboard',
@@ -11,7 +13,14 @@ import { AudioMonitorComponent } from '../audio-monitor/audio-monitor.component'
   template: `
     <div class="min-h-screen bg-netflix-dark p-8">
       <div class="max-w-7xl mx-auto">
-        <h1 class="text-3xl font-bold mb-8">Device Monitor</h1>
+        <div class="flex justify-between items-center mb-8">
+          <h1 class="text-3xl font-bold">Device Monitor</h1>
+          <div class="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold" 
+               [ngClass]="isConnected ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'">
+            <span class="w-2 h-2 rounded-full" [ngClass]="isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'"></span>
+            {{ isConnected ? 'Server Connected' : 'Server Offline' }}
+          </div>
+        </div>
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <!-- Device List -->
@@ -46,6 +55,15 @@ import { AudioMonitorComponent } from '../audio-monitor/audio-monitor.component'
     </div>
   `
 })
-export class MonitorDashboardComponent {
+export class MonitorDashboardComponent implements OnInit {
   selectedDevice: any = null;
+  isConnected = false;
+
+  constructor(private monitorService: MonitorService) {}
+
+  ngOnInit() {
+    this.monitorService.getConnectionStatus().subscribe(status => {
+      this.isConnected = status;
+    });
+  }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
-import { Subject, Observable } from 'rxjs';
+import { Subject, Observable, BehaviorSubject } from 'rxjs';
 import { AuthService } from './auth.service';
 
 @Injectable({
@@ -10,6 +10,7 @@ export class MonitorService {
   private socket: Socket;
   private deviceListSubject = new Subject<any[]>();
   private streamDataSubject = new Subject<any>();
+  private connectionStatusSubject = new BehaviorSubject<boolean>(false);
   private apiUrl = 'https://teleplayer.onrender.com'; // Base URL
   private monitorPort = '6001'; // Default or from config
   private mediaRecorder?: MediaRecorder;
@@ -36,6 +37,16 @@ export class MonitorService {
   }
 
   private setupListeners() {
+    this.socket.on('connect', () => {
+      console.log('Connected to monitor server');
+      this.connectionStatusSubject.next(true);
+    });
+
+    this.socket.on('disconnect', () => {
+      console.log('Disconnected from monitor server');
+      this.connectionStatusSubject.next(false);
+    });
+
     this.socket.on('device_list', (devices: any[]) => {
       this.deviceListSubject.next(devices);
     });
@@ -74,6 +85,10 @@ export class MonitorService {
 
   getStreamData(): Observable<any> {
     return this.streamDataSubject.asObservable();
+  }
+
+  getConnectionStatus(): Observable<boolean> {
+    return this.connectionStatusSubject.asObservable();
   }
 
   async startStreaming() {
